@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Student Login – TLC{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-5">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white text-center py-3">
+        <img src="{% static 'images/tlc_logo.png' %}" alt="TLC Logo" style="height: 50px; width: auto; margin-bottom: 8px;">
+        <h4 class="mb-0">Student Login</h4>
+      </div>
+      <div class="card-body">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" id="studentLoginForm" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label">Class</label>
+            {{ form.student_class }}
+            {% if form.student_class.errors %}
+              <div class="text-danger small">{{ form.student_class.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Student Name</label>
+            {{ form.student }}
+            {% if form.student.errors %}
+              <div class="text-danger small">{{ form.student.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">PIN</label>
+            {{ form.pin }}
+            {% if form.pin.errors %}
+              <div class="text-danger small">{{ form.pin.errors }}</div>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const classSelect = document.getElementById('id_student_class');
+  const studentSelect = document.getElementById('id_student');
+
+  function loadStudents(selectedClass) {
+    studentSelect.innerHTML = '<option value="">---------</option>';
+    if (!selectedClass) return;
+
+    fetch(`{% url 'accounts:students_by_class' %}?class=${encodeURIComponent(selectedClass)}`)
+      .then(r => r.json())
+      .then(data => {
+        data.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.name} (${s.admission_number})`;
+          studentSelect.appendChild(opt);
+        });
+      });
+  }
+
+  classSelect.addEventListener('change', function () {
+    loadStudents(this.value);
+  });
+
+  if (classSelect.value) {
+    loadStudents(classSelect.value);
+  }
+});
+</script>
+{% endblock %}

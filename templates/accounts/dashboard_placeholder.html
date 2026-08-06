@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h3>Welcome, {{ user.username }}</h3>
+<p class="text-muted">Role: {{ user.get_role_display }}</p>
+
+{% if role == 'SUPER_ADMIN' %}
+    <div class="list-group" style="max-width: 500px;">
+
+        <a href="{% url 'accounts:user_list' %}"
+           class="list-group-item list-group-item-action">
+            👥 Manage Users
+        </a>
+
+        <a href="{% url 'accounts:create_teacher' %}"
+           class="list-group-item list-group-item-action">
+            👨‍🏫 Create Teacher
+        </a>
+
+        <a href="{% url 'accounts:create_student' %}"
+           class="list-group-item list-group-item-action">
+            🎓 Create Student
+        </a>
+
+        <hr>
+
+        <a href="{% url 'exams:subject_list' %}"
+           class="list-group-item list-group-item-action">
+            📚 Manage Subjects
+        </a>
+
+        <a href="{% url 'exams:exam_list' %}"
+           class="list-group-item list-group-item-action">
+            📝 Manage Exams
+        </a>
+
+        <a href="{% url 'attempts:admin_results' %}"
+           class="list-group-item list-group-item-action">
+            📊 All Results
+        </a>
+
+    </div>
+{% elif role == 'TEACHER' %}
+    <div class="list-group" style="max-width: 400px;">
+        <a href="{% url 'exams:subject_list' %}" class="list-group-item list-group-item-action">My Subjects</a>
+        <a href="{% url 'exams:exam_list' %}" class="list-group-item list-group-item-action">My Exams</a>
+        <a href="{% url 'attempts:teacher_results' %}" class="list-group-item list-group-item-action">Student Results</a>
+    </div>
+{% elif role == 'STUDENT' %}
+    <div class="list-group" style="max-width: 400px;">
+        <a href="{% url 'attempts:available_exams' %}" class="list-group-item list-group-item-action">Available Exams</a>
+    </div>
+{% endif %}
+{% endblock %}

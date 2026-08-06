@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Student Results{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Student Results</h4>
+
+<table class="table table-bordered bg-white">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Exam</th>
+            <th>Score</th>
+            <th>Submitted At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attempt in attempts %}
+        <tr>
+            <td>{{ attempt.student.username }}</td>
+            <td>{{ attempt.exam.title }}</td>
+            <td>{{ attempt.score }} / {{ attempt.total_marks }}</td>
+            <td>{{ attempt.submitted_at }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted">No submissions yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
