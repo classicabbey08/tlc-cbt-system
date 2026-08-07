@@ -6,35 +6,56 @@ from .managers import CustomUserManager
 
 class User(AbstractUser):
     """
-    Single user model for all three roles. A `role` field determines
-    what a user can do; access control is enforced in views via the
-    mixins/decorators in this app, not via Django permissions/groups,
-    to keep things simple.
+    Single user model for all roles.
     """
 
     class Role(models.TextChoices):
-        SUPER_ADMIN = 'SUPER_ADMIN', 'Super Admin'
-        TEACHER = 'TEACHER', 'Teacher'
-        STUDENT = 'STUDENT', 'Student'
+        SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
+        TEACHER = "TEACHER", "Teacher"
+        STUDENT = "STUDENT", "Student"
 
     class StudentClass(models.TextChoices):
-        JSS1 = 'JSS1', 'JSS1'
-        JSS2 = 'JSS2', 'JSS2'
-        JSS3 = 'JSS3', 'JSS3'
-        SSS1 = 'SSS1', 'SSS1'
-        SSS2 = 'SSS2', 'SSS2'
-        SSS3 = 'SSS3', 'SSS3'
+        JSS1 = "JSS1", "JSS1"
+        JSS2 = "JSS2", "JSS2"
+        JSS3 = "JSS3", "JSS3"
+        SSS1 = "SSS1", "SSS1"
+        SSS2 = "SSS2", "SSS2"
+        SSS3 = "SSS3", "SSS3"
 
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.STUDENT)
+    class Department(models.TextChoices):
+        GENERAL = "GENERAL", "General"
+        SCIENCE = "SCIENCE", "Science"
+        COMMERCIAL = "COMMERCIAL", "Commercial"
+        ARTS = "ARTS", "Arts"
 
-    # Only relevant for students; harmless/unused for other roles.
-    admission_number = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.STUDENT,
+    )
+
+    # Student information
+    admission_number = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        null=True,
+    )
+
     student_class = models.CharField(
         max_length=10,
         choices=StudentClass.choices,
         blank=True,
         null=True,
-        help_text="Only used for students"
+        help_text="Only used for students",
+    )
+
+    department = models.CharField(
+        max_length=20,
+        choices=Department.choices,
+        default=Department.GENERAL,
+        blank=True,
+        help_text="General for JSS students; Science, Commercial or Arts for SSS students.",
     )
 
     objects = CustomUserManager()

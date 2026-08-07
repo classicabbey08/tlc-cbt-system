@@ -7,15 +7,17 @@ from accounts.models import User
 class Subject(models.Model):
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True)
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='subjects'
+        related_name="subjects",
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -29,15 +31,21 @@ class Exam(models.Model):
     subject = models.ForeignKey(
         Subject,
         on_delete=models.CASCADE,
-        related_name='exams'
+        related_name="exams",
     )
 
     title = models.CharField(max_length=200)
 
-    # NEW FIELD
     target_class = models.CharField(
         max_length=10,
-        choices=User.StudentClass.choices
+        choices=User.StudentClass.choices,
+    )
+
+    # NEW FIELD
+    department = models.CharField(
+        max_length=20,
+        choices=User.Department.choices,
+        default=User.Department.GENERAL,
     )
 
     duration_minutes = models.PositiveIntegerField(default=30)
@@ -47,16 +55,19 @@ class Exam(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='exams'
+        related_name="exams",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.title} ({self.target_class})"
+        if self.target_class.startswith("JSS"):
+            return f"{self.title} ({self.target_class})"
+
+        return f"{self.title} ({self.target_class} - {self.department})"
 
     @property
     def question_count(self):
@@ -64,14 +75,14 @@ class Exam(models.Model):
 
     @property
     def total_marks(self):
-        return sum(self.questions.values_list('marks', flat=True))
+        return sum(self.questions.values_list("marks", flat=True))
 
 
 class Question(models.Model):
     exam = models.ForeignKey(
         Exam,
         on_delete=models.CASCADE,
-        related_name='questions'
+        related_name="questions",
     )
 
     text = models.TextField()
@@ -81,7 +92,7 @@ class Question(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
 
     def __str__(self):
         return self.text[:60]
@@ -91,7 +102,7 @@ class Choice(models.Model):
     question = models.ForeignKey(
         Question,
         on_delete=models.CASCADE,
-        related_name='choices'
+        related_name="choices",
     )
 
     text = models.CharField(max_length=500)
