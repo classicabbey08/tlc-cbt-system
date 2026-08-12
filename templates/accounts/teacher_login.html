@@ -5,42 +5,73 @@
 
 {% block content %}
 <div class="row justify-content-center mt-5">
-  <div class="col-md-5">
-    <div class="card shadow">
-      <div class="card-header bg-success text-white text-center py-3">
-        <img src="{% static 'images/tlc_logo.png' %}" alt="TLC Logo" style="height: 50px; width: auto; margin-bottom: 8px;">
-        <h4 class="mb-0">Teacher Login</h4>
-      </div>
-      <div class="card-body">
-        {% if form.non_field_errors %}
-          <div class="alert alert-danger">
-            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-          </div>
-        {% endif %}
+    <div class="col-md-5">
 
-        <form method="post" novalidate>
-          {% csrf_token %}
+        <div class="card shadow">
 
-          <div class="mb-3">
-            <label class="form-label">Teacher Name</label>
-            {{ form.teacher }}
-            {% if form.teacher.errors %}
-              <div class="text-danger small">{{ form.teacher.errors }}</div>
-            {% endif %}
-          </div>
+            <div class="card-header bg-success text-white text-center py-3">
+                <img
+                    src="{% static 'images/tlc_logo.png' %}"
+                    alt="TLC Logo"
+                    style="height: 50px; width: auto; margin-bottom: 8px;"
+                >
 
-          <div class="mb-3">
-            <label class="form-label">PIN</label>
-            {{ form.pin }}
-            {% if form.pin.errors %}
-              <div class="text-danger small">{{ form.pin.errors }}</div>
-            {% endif %}
-          </div>
+                <h4 class="mb-0">Teacher Login</h4>
+            </div>
 
-          <button type="submit" class="btn btn-success w-100">Login</button>
-        </form>
-      </div>
+            <div class="card-body">
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.teacher.id_for_label }}"
+                               class="form-label">
+                            Teacher Name
+                        </label>
+
+                        {{ form.teacher }}
+
+                        {% if form.teacher.errors %}
+                            <div class="text-danger small">
+                                {{ form.teacher.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.pin.id_for_label }}"
+                               class="form-label">
+                            PIN
+                        </label>
+
+                        {{ form.pin }}
+
+                        {% if form.pin.errors %}
+                            <div class="text-danger small">
+                                {{ form.pin.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-success w-100">
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
     </div>
-  </div>
 </div>
 {% endblock %}
