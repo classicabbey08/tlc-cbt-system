@@ -5,7 +5,17 @@ Django settings for the CBT System project.
 from pathlib import Path
 from decouple import config, Csv
 
+
+# =========================
+# BASE DIRECTORY
+# =========================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# =========================
+# SECURITY
+# =========================
 
 SECRET_KEY = config(
     "SECRET_KEY",
@@ -24,6 +34,11 @@ ALLOWED_HOSTS = config(
     cast=Csv(),
 )
 
+
+# =========================
+# INSTALLED APPS
+# =========================
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,9 +56,17 @@ INSTALLED_APPS = [
     "attempts",
 ]
 
+
+# =========================
+# MIDDLEWARE
+# =========================
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # WhiteNoise must come immediately after SecurityMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -52,7 +75,17 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+# =========================
+# URL CONFIGURATION
+# =========================
+
 ROOT_URLCONF = "cbt_system.urls"
+
+
+# =========================
+# TEMPLATES
+# =========================
 
 TEMPLATES = [
     {
@@ -70,7 +103,17 @@ TEMPLATES = [
     },
 ]
 
+
+# =========================
+# WSGI
+# =========================
+
 WSGI_APPLICATION = "cbt_system.wsgi.application"
+
+
+# =========================
+# DATABASE
+# =========================
 
 DATABASES = {
     "default": {
@@ -79,22 +122,49 @@ DATABASES = {
     }
 }
 
+
+# =========================
+# PASSWORD VALIDATION
+# =========================
+
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        ),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "MinimumLengthValidator"
+        ),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "CommonPasswordValidator"
+        ),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "NumericPasswordValidator"
+        ),
     },
 ]
 
+
+# =========================
+# CUSTOM USER MODEL
+# =========================
+
 AUTH_USER_MODEL = "accounts.User"
+
+
+# =========================
+# INTERNATIONALIZATION
+# =========================
 
 LANGUAGE_CODE = "en-us"
 
@@ -104,7 +174,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = "static/"
+
+# =========================
+# STATIC & MEDIA FILES
+# =========================
+
+STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
@@ -112,15 +187,36 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"
-)
+
+# Django 4.2+ storage configuration
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage."
+            "CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
+
 
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
+
+# =========================
+# DEFAULT PRIMARY KEY
+# =========================
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# =========================
+# LOGIN / LOGOUT
+# =========================
 
 LOGIN_URL = "accounts:login"
 
@@ -128,13 +224,35 @@ LOGIN_REDIRECT_URL = "accounts:dashboard_redirect"
 
 LOGOUT_REDIRECT_URL = "accounts:login"
 
+
+# =========================
+# CSRF / RENDER
+# =========================
+
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
     default="https://*.onrender.com",
     cast=Csv(),
 )
 
+
+# Tell Django that Render's HTTPS proxy is being used
 SECURE_PROXY_SSL_HEADER = (
     "HTTP_X_FORWARDED_PROTO",
     "https",
+)
+
+INITIAL_SUPERUSER_USERNAME = config(
+    "INITIAL_SUPERUSER_USERNAME",
+    default="",
+)
+
+INITIAL_SUPERUSER_EMAIL = config(
+    "INITIAL_SUPERUSER_EMAIL",
+    default="",
+)
+
+INITIAL_SUPERUSER_PASSWORD = config(
+    "INITIAL_SUPERUSER_PASSWORD",
+    default="",
 )
