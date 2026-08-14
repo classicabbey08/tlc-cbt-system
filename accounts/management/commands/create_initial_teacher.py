@@ -1,43 +1,20 @@
-from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Create the initial production Teacher if it does not exist."
+    help = "Create or update the initial production Teacher."
+
 
     def handle(self, *args, **options):
         User = get_user_model()
 
-        username = getattr(
-            settings,
-            "INITIAL_TEACHER_USERNAME",
-            ""
-        ).strip()
-
-        email = getattr(
-            settings,
-            "INITIAL_TEACHER_EMAIL",
-            ""
-        ).strip()
-
-        first_name = getattr(
-            settings,
-            "INITIAL_TEACHER_FIRST_NAME",
-            "Teacher"
-        ).strip()
-
-        last_name = getattr(
-            settings,
-            "INITIAL_TEACHER_LAST_NAME",
-            ""
-        ).strip()
-
-        password = getattr(
-            settings,
-            "INITIAL_TEACHER_PASSWORD",
-            ""
-        )
+        username = settings.INITIAL_TEACHER_USERNAME.strip()
+        email = settings.INITIAL_TEACHER_EMAIL.strip()
+        first_name = settings.INITIAL_TEACHER_FIRST_NAME.strip()
+        last_name = settings.INITIAL_TEACHER_LAST_NAME.strip()
+        password = settings.INITIAL_TEACHER_PASSWORD
 
         if not username or not password:
             self.stdout.write(
@@ -51,33 +28,31 @@ class Command(BaseCommand):
         user = User.objects.filter(username=username).first()
 
         if user:
-            changed = False
+            user.role = User.Role.TEACHER
+            user.is_staff = False
+            user.is_superuser = False
 
-            if user.role != User.Role.TEACHER:
-                user.role = User.Role.TEACHER
-                changed = True
-
-            if first_name and user.first_name != first_name:
-                user.first_name = first_name
-                changed = True
-
-            if last_name and user.last_name != last_name:
-                user.last_name = last_name
-                changed = True
-
-            if email and user.email != email:
+            if email:
                 user.email = email
-                changed = True
 
-            if changed:
-                user.save()
+            if first_name:
+                user.first_name = first_name
+
+            if last_name:
+                user.last_name = last_name
+
+            # Make sure the production PIN/password is correct.
+            user.set_password(password)
+
+            user.save()
 
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Teacher '{username}' already exists. "
-                    f"Role verified as TEACHER."
+                    "Account verified and password updated."
                 )
             )
+
             return
 
         user = User.objects.create_user(
@@ -95,6 +70,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Initial Teacher '{user.username}' created successfully."
+                f"Initial Teacher '{user.username}' "
+                "created successfully."
             )
-        )                                                                                       
+        )
