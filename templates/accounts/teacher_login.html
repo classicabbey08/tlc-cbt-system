@@ -1,77 +1,66 @@
-{% extends "base.html" %}
-{% load static %}
+class TeacherLoginForm(forms.Form):
+teacher = forms.ModelChoiceField(
+label="Teacher Name",
+queryset=User.objects.none(),
+empty_label="---------",
+widget=forms.Select(
+attrs={
+"class": "form-select",
+}
+),
+)
 
-{% block title %}Teacher Login – TLC{% endblock %}
 
-{% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
+pin = forms.CharField(
+    label="PIN",
+    max_length=10,
+    widget=forms.PasswordInput(
+        attrs={
+            "class": "form-control",
+            "placeholder": "Enter your PIN",
+        }
+    ),
+)
 
-        <div class="card shadow">
+def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
 
-            <div class="card-header bg-success text-white text-center py-3">
-                <img
-                    src="{% static 'images/tlc_logo.png' %}"
-                    alt="TLC Logo"
-                    style="height: 50px; width: auto; margin-bottom: 8px;"
-                >
+    self.fields["teacher"].queryset = (
+        User.objects.filter(
+            role=User.Role.TEACHER,
+            is_active=True,
+        )
+        .order_by("first_name", "last_name", "username")
+    )
 
-                <h4 class="mb-0">Teacher Login</h4>
-            </div>
+def clean(self):
+    cleaned = super().clean()
 
-            <div class="card-body">
+    teacher = cleaned.get("teacher")
+    pin = cleaned.get("pin")
 
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
+    if teacher and pin:
+        user = authenticate(
+            username=teacher.username,
+            password=pin,
+        )
 
-                <form method="post">
-                    {% csrf_token %}
+        if user is None:
+            raise forms.ValidationError(
+                "Incorrect PIN."
+            )
 
-                    <div class="mb-3">
-                        <label for="{{ form.teacher.id_for_label }}"
-                               class="form-label">
-                            Teacher Name
-                        </label>
+        if not user.is_teacher:
+            raise forms.ValidationError(
+                "This account is not a teacher account."
+            )
 
-                        {{ form.teacher }}
+        if not user.is_active:
+            raise forms.ValidationError(
+                "This teacher account is inactive."
+            )
 
-                        {% if form.teacher.errors %}
-                            <div class="text-danger small">
-                                {{ form.teacher.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
+        cleaned["user"] = user
 
-                    <div class="mb-3">
-                        <label for="{{ form.pin.id_for_label }}"
-                               class="form-label">
-                            PIN
-                        </label>
+    return cleaned
 
-                        {{ form.pin }}
-
-                        {% if form.pin.errors %}
-                            <div class="text-danger small">
-                                {{ form.pin.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <button type="submit"
-                            class="btn btn-success w-100">
-                        Login
-                    </button>
-
-                </form>
-
-            </div>
-        </div>
-
-    </div>
-</div>
-{% endblock %}

@@ -1,29 +1,130 @@
 {% extends 'base.html' %}
+
 {% block title %}Student Results{% endblock %}
 
 {% block content %}
-<h4 class="mb-3">Student Results</h4>
 
-<table class="table table-bordered bg-white">
-    <thead>
-        <tr>
-            <th>Student</th>
-            <th>Exam</th>
-            <th>Score</th>
-            <th>Submitted At</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for attempt in attempts %}
-        <tr>
-            <td>{{ attempt.student.username }}</td>
-            <td>{{ attempt.exam.title }}</td>
-            <td>{{ attempt.score }} / {{ attempt.total_marks }}</td>
-            <td>{{ attempt.submitted_at }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4" class="text-center text-muted">No submissions yet.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Student Results</h4>
+        <p class="text-muted mb-0">
+            View results from students who have submitted your exams.
+        </p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+
+```
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Student</th>
+                    <th>Exam</th>
+                    <th>Subject</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Submitted</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for attempt in attempts %}
+
+                <tr>
+
+                    <td>
+                        <div class="fw-semibold">
+                            {{ attempt.student.get_full_name|default:attempt.student.username }}
+                        </div>
+
+                        {% if attempt.student.admission_number %}
+                            <small class="text-muted">
+                                {{ attempt.student.admission_number }}
+                            </small>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ attempt.exam.title }}
+                    </td>
+
+                    <td>
+                        {{ attempt.exam.subject.name }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ attempt.score }}
+                        </strong>
+                        /
+                        {{ attempt.total_marks }}
+                    </td>
+
+                    <td>
+                        {% if attempt.total_marks %}
+                            {% widthratio attempt.score attempt.total_marks 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if attempt.submitted_at %}
+                            {{ attempt.submitted_at|date:"M d, Y" }}
+                            <br>
+                            <small class="text-muted">
+                                {{ attempt.submitted_at|time:"g:i A" }}
+                            </small>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <a
+                            href="{% url 'attempts:teacher_result_detail' attempt.id %}"
+                            class="btn btn-sm btn-outline-primary"
+                        >
+                            View Result
+                        </a>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+
+                        <div class="text-muted">
+                            <h6>No submissions yet</h6>
+                            <p class="mb-0">
+                                Student results will appear here after
+                                students submit your exams.
+                            </p>
+                        </div>
+
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+```
+
+</div>
+
 {% endblock %}
