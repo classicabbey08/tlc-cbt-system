@@ -39,12 +39,90 @@ class StudentCreationForm(UserCreationForm):
         ]
 
         widgets = {
-            "student_class": forms.Select(attrs={"class": "form-select"}),
-            "department": forms.Select(attrs={"class": "form-select"}),
+            "username": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control"}
+            ),
+            "admission_number": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "student_class": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "department": forms.Select(
+                attrs={"class": "form-select"}
+            ),
         }
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.role = User.Role.STUDENT
+
+        if user.student_class in [
+            User.StudentClass.JSS1,
+            User.StudentClass.JSS2,
+            User.StudentClass.JSS3,
+        ]:
+            user.department = User.Department.GENERAL
+
+        if commit:
+            user.save()
+
+        return user
+
+
+class TeacherStudentCreationForm(UserCreationForm):
+    """
+    Form used by teachers to create student accounts.
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "admission_number",
+            "student_class",
+            "department",
+        ]
+
+        widgets = {
+            "username": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control"}
+            ),
+            "admission_number": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "student_class": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "department": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+        }
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+
         user.role = User.Role.STUDENT
 
         # JSS students are always General
@@ -59,6 +137,65 @@ class StudentCreationForm(UserCreationForm):
             user.save()
 
         return user
+
+
+class TeacherStudentEditForm(forms.ModelForm):
+    """
+    Form used by teachers to edit student accounts.
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "admission_number",
+            "student_class",
+            "department",
+            "is_active",
+        ]
+
+        widgets = {
+            "username": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control"}
+            ),
+            "admission_number": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "student_class": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "department": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "is_active": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+        }
+
+    def clean_department(self):
+        department = self.cleaned_data.get("department")
+        student_class = self.cleaned_data.get("student_class")
+
+        if student_class in [
+            User.StudentClass.JSS1,
+            User.StudentClass.JSS2,
+            User.StudentClass.JSS3,
+        ]:
+            return User.Department.GENERAL
+
+        return department
 
 
 class AdminPasswordResetForm(forms.Form):
@@ -127,6 +264,7 @@ class StudentLoginForm(forms.Form):
                 User.objects.filter(
                     role=User.Role.STUDENT,
                     student_class=student_class,
+                    is_active=True,
                 )
                 .order_by("first_name", "last_name")
             )
@@ -153,6 +291,11 @@ class StudentLoginForm(forms.Form):
                     "This account is not a student account."
                 )
 
+            if not user.is_active:
+                raise forms.ValidationError(
+                    "This student account is inactive."
+                )
+
             cleaned["user"] = user
 
         return cleaned
@@ -162,10 +305,12 @@ class TeacherLoginForm(forms.Form):
     teacher = forms.ModelChoiceField(
         label="Teacher Name",
         queryset=User.objects.filter(
-            role=User.Role.TEACHER
+            role=User.Role.TEACHER,
+            is_active=True,
         ).order_by(
             "first_name",
             "last_name",
+            "username",
         ),
         widget=forms.Select(
             attrs={
@@ -205,6 +350,11 @@ class TeacherLoginForm(forms.Form):
             if not user.is_teacher:
                 raise forms.ValidationError(
                     "This account is not a teacher account."
+                )
+
+            if not user.is_active:
+                raise forms.ValidationError(
+                    "This teacher account is inactive."
                 )
 
             cleaned["user"] = user

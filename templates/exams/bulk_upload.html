@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Bulk Upload Questions{% endblock %}
 
@@ -29,24 +30,28 @@
                 {% csrf_token %}
 
                 <div class="mb-3">
-                    <label class="form-label">
+                    <label for="excel_file" class="form-label">
                         Select Excel File (.xlsx)
                     </label>
 
                     <input
                         type="file"
+                        id="excel_file"
                         name="excel_file"
                         class="form-control"
-                        accept=".xlsx,.xls"
-                        required>
+                        accept=".xlsx"
+                        required
+                    >
                 </div>
 
                 <button type="submit" class="btn btn-success">
                     Upload Questions
                 </button>
 
-                <a href="{% url 'exams:question_list' exam.id %}"
-                   class="btn btn-secondary">
+                <a
+                    href="{% url 'exams:question_list' exam.id %}"
+                    class="btn btn-secondary"
+                >
                     Cancel
                 </a>
 

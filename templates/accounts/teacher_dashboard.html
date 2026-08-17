@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="mb-4">
+
+        <h2>
+            Welcome, {{ teacher.first_name|default:teacher.username }}
+        </h2>
+
+        <p class="text-muted">
+            Teacher Dashboard
+        </p>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- Students -->
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        👨‍🎓 Students
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Add, edit, deactivate or remove
+                        student accounts.
+                    </p>
+
+                    <a
+                        href="{% url 'accounts:teacher_students' %}"
+                        class="btn btn-primary"
+                    >
+                        Manage Students
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Exams -->
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        📝 Exams
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Create exams and manage your CBT
+                        questions.
+                    </p>
+
+                    <a
+                        href="{% url 'exams:exam_list' %}"
+                        class="btn btn-primary"
+                    >
+                        Manage Exams
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Subjects -->
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        📚 Subjects
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Create and manage examination
+                        subjects.
+                    </p>
+
+                    <a
+                        href="{% url 'exams:subject_list' %}"
+                        class="btn btn-primary"
+                    >
+                        Manage Subjects
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+{% endblock %}

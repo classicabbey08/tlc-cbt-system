@@ -1,66 +1,86 @@
-class TeacherLoginForm(forms.Form):
-teacher = forms.ModelChoiceField(
-label="Teacher Name",
-queryset=User.objects.none(),
-empty_label="---------",
-widget=forms.Select(
-attrs={
-"class": "form-select",
-}
-),
-)
+{% extends "base.html" %}
 
+{% block title %}Teacher Login{% endblock %}
 
-pin = forms.CharField(
-    label="PIN",
-    max_length=10,
-    widget=forms.PasswordInput(
-        attrs={
-            "class": "form-control",
-            "placeholder": "Enter your PIN",
-        }
-    ),
-)
+{% block content %}
 
-def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
 
-    self.fields["teacher"].queryset = (
-        User.objects.filter(
-            role=User.Role.TEACHER,
-            is_active=True,
-        )
-        .order_by("first_name", "last_name", "username")
-    )
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
 
-def clean(self):
-    cleaned = super().clean()
+                    <div class="text-center mb-4">
+                        <h3 class="mb-1">Teacher Login</h3>
+                        <p class="text-muted mb-0">
+                            Select your name and enter your PIN.
+                        </p>
+                    </div>
 
-    teacher = cleaned.get("teacher")
-    pin = cleaned.get("pin")
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
-    if teacher and pin:
-        user = authenticate(
-            username=teacher.username,
-            password=pin,
-        )
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
-        if user is None:
-            raise forms.ValidationError(
-                "Incorrect PIN."
-            )
+                    <form method="post">
+                        {% csrf_token %}
 
-        if not user.is_teacher:
-            raise forms.ValidationError(
-                "This account is not a teacher account."
-            )
+                        <div class="mb-3">
+                            <label for="{{ form.teacher.id_for_label }}"
+                                   class="form-label">
+                                Teacher Name
+                            </label>
 
-        if not user.is_active:
-            raise forms.ValidationError(
-                "This teacher account is inactive."
-            )
+                            {{ form.teacher }}
 
-        cleaned["user"] = user
+                            {% if form.teacher.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.teacher.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
 
-    return cleaned
+                        <div class="mb-4">
+                            <label for="{{ form.pin.id_for_label }}"
+                                   class="form-label">
+                                PIN
+                            </label>
 
+                            {{ form.pin }}
+
+                            {% if form.pin.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.pin.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Login
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}   
