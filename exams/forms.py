@@ -1,24 +1,67 @@
 from django import forms
 from django.forms import inlineformset_factory
 
+from accounts.models import User
+
 from .models import Subject, Exam, Question, Choice
 
 
+# =========================================================
+# HELPERS
+# =========================================================
+
+JSS_CLASSES = [
+    User.StudentClass.JSS1,
+    User.StudentClass.JSS2,
+    User.StudentClass.JSS3,
+]
+
+SS_CLASSES = [
+    User.StudentClass.SSS1,
+    User.StudentClass.SSS2,
+    User.StudentClass.SSS3,
+]
+
+
+# =========================================================
+# SUBJECT FORM
+# =========================================================
+
 class SubjectForm(forms.ModelForm):
+
     class Meta:
         model = Subject
-        fields = ["name", "description"]
+
+        fields = [
+            "name",
+            "description",
+        ]
+
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+
             "description": forms.Textarea(
-                attrs={"class": "form-control", "rows": 3}
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                }
             ),
         }
 
 
+# =========================================================
+# EXAM FORM
+# =========================================================
+
 class ExamForm(forms.ModelForm):
+
     class Meta:
         model = Exam
+
         fields = [
             "subject",
             "title",
@@ -29,34 +72,181 @@ class ExamForm(forms.ModelForm):
         ]
 
         widgets = {
-            "subject": forms.Select(attrs={"class": "form-select"}),
-            "title": forms.TextInput(attrs={"class": "form-control"}),
-            "target_class": forms.Select(attrs={"class": "form-select"}),
-            "department": forms.Select(attrs={"class": "form-select"}),
-            "duration_minutes": forms.NumberInput(
-                attrs={"class": "form-control", "min": 1}
+            "subject": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
             ),
+
+            "title": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+
+            "target_class": forms.Select(
+                attrs={
+                    "class": "form-select",
+                    "id": "id_target_class",
+                }
+            ),
+
+            "department": forms.Select(
+                attrs={
+                    "class": "form-select",
+                    "id": "id_department",
+                }
+            ),
+
+            "duration_minutes": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "min": 1,
+                }
+            ),
+
             "is_active": forms.CheckboxInput(
-                attrs={"class": "form-check-input"}
+                attrs={
+                    "class": "form-check-input",
+                }
             ),
         }
 
-    def __init__(self, *args, teacher=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        *args,
+        teacher=None,
+        **kwargs
+    ):
+
+        super().__init__(
+            *args,
+            **kwargs
+        )
+
+        # -------------------------------------------------
+        # SUBJECT PERMISSIONS
+        # -------------------------------------------------
 
         if teacher is not None:
-            if getattr(teacher, "is_super_admin", False):
-                self.fields["subject"].queryset = Subject.objects.all().order_by("name")
-            else:
-                self.fields["subject"].queryset = Subject.objects.filter(
-                    created_by=teacher
-                ).order_by("name")
 
+            if getattr(
+                teacher,
+                "is_super_admin",
+                False,
+            ):
+
+                self.fields[
+                    "subject"
+                ].queryset = (
+                    Subject.objects
+                    .all()
+                    .order_by("name")
+                )
+
+            else:
+
+                self.fields[
+                    "subject"
+                ].queryset = (
+                    Subject.objects
+                    .filter(
+                        created_by=teacher
+                    )
+                    .order_by("name")
+                )
+
+        # -------------------------------------------------
+        # DEPARTMENT CHOICES
+        #
+        # GENERAL is NOT offered as a manual choice.
+        #
+        # JSS automatically becomes GENERAL.
+        # -------------------------------------------------
+
+        self.fields[
+            "department"
+        ].choices = [
+            (
+                User.Department.SCIENCE,
+                "Science",
+            ),
+            (
+                User.Department.COMMERCIAL,
+                "Commercial",
+            ),
+            (
+                User.Department.ARTS,
+                "Arts",
+            ),
+        ]
+
+    # =====================================================
+    # CLEAN
+    # =====================================================
+
+    def clean(self):
+
+        cleaned = super().clean()
+
+        target_class = cleaned.get(
+            "target_class"
+        )
+
+        department = cleaned.get(
+            "department"
+        )
+
+        # -------------------------------------------------
+        # JSS
+        #
+        # JSS NEVER uses a department.
+        # -------------------------------------------------
+
+        if target_class in JSS_CLASSES:
+
+            cleaned[
+                "department"
+            ] = User.Department.GENERAL
+
+        # -------------------------------------------------
+        # SSS
+        #
+        # SSS MUST have a real department.
+        # -------------------------------------------------
+
+        elif target_class in SS_CLASSES:
+
+            if not department:
+
+                self.add_error(
+                    "department",
+                    "Please select a department for this SSS exam.",
+                )
+
+            elif department == User.Department.GENERAL:
+
+                self.add_error(
+                    "department",
+                    "SSS exams must use Science, Commercial, or Arts.",
+                )
+
+        return cleaned
+
+
+# =========================================================
+# QUESTION FORM
+# =========================================================
 
 class QuestionForm(forms.ModelForm):
+
     class Meta:
         model = Question
-        fields = ["text", "marks"]
+
+        fields = [
+            "text",
+            "marks",
+        ]
 
         widgets = {
             "text": forms.Textarea(
@@ -65,6 +255,7 @@ class QuestionForm(forms.ModelForm):
                     "rows": 3,
                 }
             ),
+
             "marks": forms.NumberInput(
                 attrs={
                     "class": "form-control",
@@ -74,20 +265,38 @@ class QuestionForm(forms.ModelForm):
         }
 
 
+# =========================================================
+# CHOICE FORM
+# =========================================================
+
 class ChoiceForm(forms.ModelForm):
+
     class Meta:
         model = Choice
-        fields = ["text", "is_correct"]
+
+        fields = [
+            "text",
+            "is_correct",
+        ]
 
         widgets = {
             "text": forms.TextInput(
-                attrs={"class": "form-control"}
+                attrs={
+                    "class": "form-control",
+                }
             ),
+
             "is_correct": forms.CheckboxInput(
-                attrs={"class": "form-check-input"}
+                attrs={
+                    "class": "form-check-input",
+                }
             ),
         }
 
+
+# =========================================================
+# CHOICE FORMSET
+# =========================================================
 
 ChoiceFormSet = inlineformset_factory(
     Question,

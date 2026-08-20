@@ -1,11 +1,16 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.views.decorators.http import require_GET
 
 from .decorators import role_required
+
 from .forms import (
     AdminPasswordResetForm,
     StudentCreationForm,
@@ -15,20 +20,19 @@ from .forms import (
     TeacherStudentCreationForm,
     TeacherStudentEditForm,
 )
+
 from .models import User
 
 
-# ==========================
-# Dashboard
-# ==========================
+# =========================================================
+# DASHBOARD
+# =========================================================
 
 @login_required
 def dashboard_redirect(request):
-    """
-    Send users to the appropriate dashboard based on their role.
-    """
 
     if request.user.role == User.Role.SUPER_ADMIN:
+
         return render(
             request,
             "accounts/dashboard_placeholder.html",
@@ -38,36 +42,40 @@ def dashboard_redirect(request):
         )
 
     if request.user.role == User.Role.TEACHER:
+
         return render(
             request,
-            "accounts/dashboard_placeholder.html",
+            "accounts/teacher_dashboard.html",
             {
-                "role": request.user.role,
+                "teacher": request.user,
             },
         )
 
     if request.user.role == User.Role.STUDENT:
-        return render(
-            request,
-            "accounts/dashboard_placeholder.html",
-            {
-                "role": request.user.role,
-            },
+
+        # IMPORTANT:
+        # Students go directly to the real exam page.
+        return redirect(
+            "attempts:available_exams"
         )
 
-    return redirect("accounts:home")
+    return redirect(
+        "accounts:home"
+    )
 
 
-# ==========================
-# Super Admin
-# ==========================
+# =========================================================
+# SUPER ADMIN
+# =========================================================
 
 @role_required("SUPER_ADMIN")
 def create_teacher(request):
 
     if request.method == "POST":
 
-        form = TeacherCreationForm(request.POST)
+        form = TeacherCreationForm(
+            request.POST
+        )
 
         if form.is_valid():
 
@@ -75,12 +83,19 @@ def create_teacher(request):
 
             messages.success(
                 request,
-                f"Teacher account '{teacher.username}' created successfully.",
+                (
+                    f"Teacher account "
+                    f"'{teacher.username}' "
+                    f"created successfully."
+                ),
             )
 
-            return redirect("accounts:user_list")
+            return redirect(
+                "accounts:user_list"
+            )
 
     else:
+
         form = TeacherCreationForm()
 
     return render(
@@ -97,7 +112,9 @@ def create_student(request):
 
     if request.method == "POST":
 
-        form = StudentCreationForm(request.POST)
+        form = StudentCreationForm(
+            request.POST
+        )
 
         if form.is_valid():
 
@@ -105,12 +122,19 @@ def create_student(request):
 
             messages.success(
                 request,
-                f"Student account '{student.username}' created successfully.",
+                (
+                    f"Student account "
+                    f"'{student.username}' "
+                    f"created successfully."
+                ),
             )
 
-            return redirect("accounts:user_list")
+            return redirect(
+                "accounts:user_list"
+            )
 
     else:
+
         form = StudentCreationForm()
 
     return render(
@@ -125,16 +149,30 @@ def create_student(request):
 @role_required("SUPER_ADMIN")
 def user_list(request):
 
-    role_filter = request.GET.get("role", "")
+    role_filter = request.GET.get(
+        "role",
+        "",
+    )
 
     users = (
         User.objects
-        .exclude(id=request.user.id)
-        .order_by("role", "username")
+        .exclude(
+            id=request.user.id
+        )
+        .order_by(
+            "role",
+            "username",
+        )
     )
 
-    if role_filter in {"TEACHER", "STUDENT"}:
-        users = users.filter(role=role_filter)
+    if role_filter in {
+        "TEACHER",
+        "STUDENT",
+    }:
+
+        users = users.filter(
+            role=role_filter
+        )
 
     return render(
         request,
@@ -147,7 +185,10 @@ def user_list(request):
 
 
 @role_required("SUPER_ADMIN")
-def reset_password(request, user_id):
+def reset_password(
+    request,
+    user_id,
+):
 
     target_user = get_object_or_404(
         User,
@@ -156,24 +197,35 @@ def reset_password(request, user_id):
 
     if request.method == "POST":
 
-        form = AdminPasswordResetForm(request.POST)
+        form = AdminPasswordResetForm(
+            request.POST
+        )
 
         if form.is_valid():
 
             target_user.set_password(
-                form.cleaned_data["new_password1"]
+                form.cleaned_data[
+                    "new_password1"
+                ]
             )
 
             target_user.save()
 
             messages.success(
                 request,
-                f"Password for '{target_user.username}' has been reset.",
+                (
+                    f"Password for "
+                    f"'{target_user.username}' "
+                    f"has been reset."
+                ),
             )
 
-            return redirect("accounts:user_list")
+            return redirect(
+                "accounts:user_list"
+            )
 
     else:
+
         form = AdminPasswordResetForm()
 
     return render(
@@ -186,9 +238,9 @@ def reset_password(request, user_id):
     )
 
 
-# ==========================
-# Landing Page
-# ==========================
+# =========================================================
+# HOME
+# =========================================================
 
 def home(request):
 
@@ -198,24 +250,32 @@ def home(request):
     )
 
 
-# ==========================
-# Student Login
-# ==========================
+# =========================================================
+# STUDENT LOGIN
+# =========================================================
 
 def student_login(request):
 
     if request.user.is_authenticated:
+
         logout(request)
 
     if request.method == "POST":
 
-        form = StudentLoginForm(request.POST)
+        form = StudentLoginForm(
+            request.POST
+        )
 
         if form.is_valid():
 
-            user = form.cleaned_data["user"]
+            user = form.cleaned_data[
+                "user"
+            ]
 
-            login(request, user)
+            login(
+                request,
+                user,
+            )
 
             return redirect(
                 "accounts:dashboard_redirect"
@@ -234,24 +294,32 @@ def student_login(request):
     )
 
 
-# ==========================
-# Teacher Login
-# ==========================
+# =========================================================
+# TEACHER LOGIN
+# =========================================================
 
 def teacher_login(request):
 
     if request.user.is_authenticated:
+
         logout(request)
 
     if request.method == "POST":
 
-        form = TeacherLoginForm(request.POST)
+        form = TeacherLoginForm(
+            request.POST
+        )
 
         if form.is_valid():
 
-            user = form.cleaned_data["user"]
+            user = form.cleaned_data[
+                "user"
+            ]
 
-            login(request, user)
+            login(
+                request,
+                user,
+            )
 
             return redirect(
                 "accounts:dashboard_redirect"
@@ -270,20 +338,24 @@ def teacher_login(request):
     )
 
 
-# ==========================
-# Student AJAX
-# ==========================
+# =========================================================
+# STUDENT AJAX
+# =========================================================
 
 @require_GET
 def students_by_class(request):
-    """
-    Return active students in a selected class as JSON.
-    """
 
     student_class = request.GET.get(
         "class",
         "",
-    )
+    ).strip()
+
+    if not student_class:
+
+        return JsonResponse(
+            [],
+            safe=False,
+        )
 
     students = (
         User.objects
@@ -295,17 +367,33 @@ def students_by_class(request):
         .order_by(
             "first_name",
             "last_name",
+            "username",
         )
     )
 
-    data = [
-        {
-            "id": student.id,
-            "name": f"{student.first_name} {student.last_name}".strip(),
-            "admission_number": student.admission_number,
-        }
-        for student in students
-    ]
+    data = []
+
+    for student in students:
+
+        full_name = (
+            f"{student.first_name} "
+            f"{student.last_name}"
+        ).strip()
+
+        if not full_name:
+
+            full_name = student.username
+
+        data.append(
+            {
+                "id": student.id,
+                "name": full_name,
+                "admission_number":
+                    student.admission_number or "",
+                "department":
+                    student.department or "",
+            }
+        )
 
     return JsonResponse(
         data,
@@ -313,15 +401,12 @@ def students_by_class(request):
     )
 
 
-# ==========================
-# Teacher - Student Management
-# ==========================
+# =========================================================
+# TEACHER - STUDENTS
+# =========================================================
 
 @role_required("TEACHER")
 def teacher_students(request):
-    """
-    Display all students so a teacher can manage them.
-    """
 
     students = (
         User.objects
@@ -346,9 +431,6 @@ def teacher_students(request):
 
 @role_required("TEACHER")
 def teacher_add_student(request):
-    """
-    Allow a teacher to create a new student account.
-    """
 
     if request.method == "POST":
 
@@ -362,7 +444,11 @@ def teacher_add_student(request):
 
             messages.success(
                 request,
-                f"Student '{student.username}' added successfully.",
+                (
+                    f"Student "
+                    f"'{student.username}' "
+                    f"added successfully."
+                ),
             )
 
             return redirect(
@@ -384,10 +470,10 @@ def teacher_add_student(request):
 
 
 @role_required("TEACHER")
-def teacher_edit_student(request, user_id):
-    """
-    Allow a teacher to edit a student account.
-    """
+def teacher_edit_student(
+    request,
+    user_id,
+):
 
     student = get_object_or_404(
         User,
@@ -408,7 +494,11 @@ def teacher_edit_student(request, user_id):
 
             messages.success(
                 request,
-                f"Student '{student.username}' updated successfully.",
+                (
+                    f"Student "
+                    f"'{student.username}' "
+                    f"updated successfully."
+                ),
             )
 
             return redirect(
@@ -433,10 +523,10 @@ def teacher_edit_student(request, user_id):
 
 
 @role_required("TEACHER")
-def teacher_delete_student(request, user_id):
-    """
-    Allow a teacher to remove a student account.
-    """
+def teacher_delete_student(
+    request,
+    user_id,
+):
 
     student = get_object_or_404(
         User,
@@ -452,7 +542,11 @@ def teacher_delete_student(request, user_id):
 
         messages.success(
             request,
-            f"Student '{username}' removed successfully.",
+            (
+                f"Student "
+                f"'{username}' "
+                f"removed successfully."
+            ),
         )
 
         return redirect(

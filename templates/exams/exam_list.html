@@ -5,34 +5,23 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-
     <div>
         <h2>My Exams</h2>
-        <p class="text-muted mb-0">
-            Create and manage your CBT examinations.
-        </p>
+        <p class="text-muted mb-0">Create and manage your CBT examinations.</p>
     </div>
 
-    <a
-        href="{% url 'exams:exam_create' %}"
-        class="btn btn-primary"
-    >
+    <a href="{% url 'exams:exam_create' %}" class="btn btn-primary">
         + Create Exam
     </a>
-
 </div>
 
-
 <div class="card shadow-sm">
-
     <div class="card-body p-0">
 
         <div class="table-responsive">
-
             <table class="table table-bordered table-hover mb-0">
 
                 <thead class="table-dark">
-
                     <tr>
                         <th>Title</th>
                         <th>Subject</th>
@@ -43,9 +32,7 @@
                         <th>Active</th>
                         <th>Actions</th>
                     </tr>
-
                 </thead>
-
 
                 <tbody>
 
@@ -54,9 +41,7 @@
                     <tr>
 
                         <td>
-                            <strong>
-                                {{ exam.title }}
-                            </strong>
+                            <strong>{{ exam.title }}</strong>
                         </td>
 
                         <td>
@@ -66,7 +51,7 @@
                         <td>
                             {{ exam.target_class }}
 
-                            {% if exam.department and exam.target_class != "JSS1" and exam.target_class != "JSS2" and exam.target_class != "JSS3" %}
+                            {% if exam.department %}
                                 <br>
                                 <small class="text-muted">
                                     {{ exam.department }}
@@ -112,17 +97,22 @@
                                     href="{% url 'exams:question_list' exam.id %}"
                                     class="btn btn-sm btn-primary"
                                 >
-                                    Manage Questions
+                                    Questions
                                 </a>
 
+                                <a
+                                    href="{% url 'exams:exam_edit' exam.id %}"
+                                    class="btn btn-sm btn-warning"
+                                >
+                                    Edit
+                                </a>
 
                                 <a
                                     href="{% url 'exams:bulk_upload_questions' exam.id %}"
                                     class="btn btn-sm btn-success"
                                 >
-                                    Import Questions
+                                    Import
                                 </a>
-
 
                                 <a
                                     href="{% url 'exams:exam_delete' exam.id %}"
@@ -140,14 +130,9 @@
                     {% empty %}
 
                     <tr>
-
-                        <td
-                            colspan="8"
-                            class="text-center text-muted py-4"
-                        >
+                        <td colspan="8" class="text-center text-muted py-4">
                             No exams yet.
                         </td>
-
                     </tr>
 
                     {% endfor %}
@@ -155,11 +140,9 @@
                 </tbody>
 
             </table>
-
         </div>
 
     </div>
-
 </div>
 
 {% endblock %}

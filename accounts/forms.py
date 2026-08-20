@@ -5,9 +5,15 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import User
 
 
+# =========================================================
+# TEACHER CREATION
+# =========================================================
+
 class TeacherCreationForm(UserCreationForm):
+
     class Meta:
         model = User
+
         fields = [
             "username",
             "first_name",
@@ -15,8 +21,25 @@ class TeacherCreationForm(UserCreationForm):
             "email",
         ]
 
+        widgets = {
+            "username": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control"}
+            ),
+        }
+
     def save(self, commit=True):
+
         user = super().save(commit=False)
+
         user.role = User.Role.TEACHER
 
         if commit:
@@ -25,9 +48,15 @@ class TeacherCreationForm(UserCreationForm):
         return user
 
 
+# =========================================================
+# SUPER ADMIN - STUDENT CREATION
+# =========================================================
+
 class StudentCreationForm(UserCreationForm):
+
     class Meta:
         model = User
+
         fields = [
             "username",
             "first_name",
@@ -62,15 +91,53 @@ class StudentCreationForm(UserCreationForm):
             ),
         }
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.role = User.Role.STUDENT
+    def clean(self):
 
-        if user.student_class in [
+        cleaned = super().clean()
+
+        student_class = cleaned.get("student_class")
+        department = cleaned.get("department")
+
+        jss_classes = [
             User.StudentClass.JSS1,
             User.StudentClass.JSS2,
             User.StudentClass.JSS3,
-        ]:
+        ]
+
+        # JSS students do not have departments.
+        if student_class in jss_classes:
+
+            cleaned["department"] = User.Department.GENERAL
+
+        # SS students must have a department.
+        else:
+
+            if (
+                not department
+                or department == User.Department.GENERAL
+            ):
+
+                self.add_error(
+                    "department",
+                    "SS students must have a department.",
+                )
+
+        return cleaned
+
+    def save(self, commit=True):
+
+        user = super().save(commit=False)
+
+        user.role = User.Role.STUDENT
+
+        jss_classes = [
+            User.StudentClass.JSS1,
+            User.StudentClass.JSS2,
+            User.StudentClass.JSS3,
+        ]
+
+        if user.student_class in jss_classes:
+
             user.department = User.Department.GENERAL
 
         if commit:
@@ -78,6 +145,10 @@ class StudentCreationForm(UserCreationForm):
 
         return user
 
+
+# =========================================================
+# TEACHER - STUDENT CREATION
+# =========================================================
 
 class TeacherStudentCreationForm(UserCreationForm):
     """
@@ -86,6 +157,7 @@ class TeacherStudentCreationForm(UserCreationForm):
 
     class Meta:
         model = User
+
         fields = [
             "username",
             "first_name",
@@ -120,17 +192,51 @@ class TeacherStudentCreationForm(UserCreationForm):
             ),
         }
 
+    def clean(self):
+
+        cleaned = super().clean()
+
+        student_class = cleaned.get("student_class")
+        department = cleaned.get("department")
+
+        jss_classes = [
+            User.StudentClass.JSS1,
+            User.StudentClass.JSS2,
+            User.StudentClass.JSS3,
+        ]
+
+        if student_class in jss_classes:
+
+            cleaned["department"] = User.Department.GENERAL
+
+        else:
+
+            if (
+                not department
+                or department == User.Department.GENERAL
+            ):
+
+                self.add_error(
+                    "department",
+                    "SS students must have a department.",
+                )
+
+        return cleaned
+
     def save(self, commit=True):
+
         user = super().save(commit=False)
 
         user.role = User.Role.STUDENT
 
-        # JSS students are always General
-        if user.student_class in [
+        jss_classes = [
             User.StudentClass.JSS1,
             User.StudentClass.JSS2,
             User.StudentClass.JSS3,
-        ]:
+        ]
+
+        if user.student_class in jss_classes:
+
             user.department = User.Department.GENERAL
 
         if commit:
@@ -139,6 +245,10 @@ class TeacherStudentCreationForm(UserCreationForm):
         return user
 
 
+# =========================================================
+# TEACHER - STUDENT EDIT
+# =========================================================
+
 class TeacherStudentEditForm(forms.ModelForm):
     """
     Form used by teachers to edit student accounts.
@@ -146,6 +256,7 @@ class TeacherStudentEditForm(forms.ModelForm):
 
     class Meta:
         model = User
+
         fields = [
             "username",
             "first_name",
@@ -184,35 +295,67 @@ class TeacherStudentEditForm(forms.ModelForm):
             ),
         }
 
-    def clean_department(self):
-        department = self.cleaned_data.get("department")
-        student_class = self.cleaned_data.get("student_class")
+    def clean(self):
 
-        if student_class in [
+        cleaned = super().clean()
+
+        student_class = cleaned.get("student_class")
+        department = cleaned.get("department")
+
+        jss_classes = [
             User.StudentClass.JSS1,
             User.StudentClass.JSS2,
             User.StudentClass.JSS3,
-        ]:
-            return User.Department.GENERAL
+        ]
 
-        return department
+        if student_class in jss_classes:
 
+            cleaned["department"] = User.Department.GENERAL
+
+        else:
+
+            if (
+                not department
+                or department == User.Department.GENERAL
+            ):
+
+                self.add_error(
+                    "department",
+                    "SS students must have a department (Science, Commercial, or Arts).",
+                )
+
+        return cleaned
+
+
+# =========================================================
+# ADMIN PASSWORD RESET
+# =========================================================
 
 class AdminPasswordResetForm(forms.Form):
+
     new_password1 = forms.CharField(
         label="New password",
-        widget=forms.PasswordInput,
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control"}
+        ),
     )
 
     new_password2 = forms.CharField(
         label="Confirm new password",
-        widget=forms.PasswordInput,
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control"}
+        ),
     )
 
     def clean(self):
+
         cleaned = super().clean()
 
-        if cleaned.get("new_password1") != cleaned.get("new_password2"):
+        if (
+            cleaned.get("new_password1")
+            != cleaned.get("new_password2")
+        ):
+
             raise forms.ValidationError(
                 "The two password fields didn't match."
             )
@@ -220,10 +363,36 @@ class AdminPasswordResetForm(forms.Form):
         return cleaned
 
 
+# =========================================================
+# STUDENT LOGIN
+# =========================================================
+#
+# IMPORTANT:
+#
+# Login is intentionally:
+#
+#     CLASS
+#     STUDENT NAME
+#     PIN
+#
+# Department is NOT used here.
+#
+# Department is already stored on the student's account
+# and is used later when deciding which exams they can see.
+#
+# =========================================================
+
 class StudentLoginForm(forms.Form):
+
     student_class = forms.ChoiceField(
         label="Class",
-        choices=[("", "---------")] + list(User.StudentClass.choices),
+
+        choices=[
+            ("", "---------")
+        ] + list(
+            User.StudentClass.choices
+        ),
+
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -234,7 +403,11 @@ class StudentLoginForm(forms.Form):
 
     student = forms.ModelChoiceField(
         label="Student Name",
+
         queryset=User.objects.none(),
+
+        empty_label="---------",
+
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -245,7 +418,9 @@ class StudentLoginForm(forms.Form):
 
     pin = forms.CharField(
         label="PIN",
+
         max_length=10,
+
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
@@ -254,64 +429,109 @@ class StudentLoginForm(forms.Form):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        *args,
+        **kwargs
+    ):
 
-        if "student_class" in self.data:
-            student_class = self.data.get("student_class")
+        super().__init__(
+            *args,
+            **kwargs
+        )
 
-            self.fields["student"].queryset = (
-                User.objects.filter(
+        student_class = self.data.get(
+            "student_class"
+        )
+
+        if student_class:
+
+            self.fields[
+                "student"
+            ].queryset = (
+                User.objects
+                .filter(
                     role=User.Role.STUDENT,
                     student_class=student_class,
                     is_active=True,
                 )
-                .order_by("first_name", "last_name")
+                .order_by(
+                    "first_name",
+                    "last_name",
+                    "username",
+                )
             )
 
     def clean(self):
+
         cleaned = super().clean()
 
-        student = cleaned.get("student")
-        pin = cleaned.get("pin")
+        student = cleaned.get(
+            "student"
+        )
 
-        if student and pin:
-            user = authenticate(
-                username=student.username,
-                password=pin,
+        pin = cleaned.get(
+            "pin"
+        )
+
+        if not student:
+
+            return cleaned
+
+        if not pin:
+
+            return cleaned
+
+        user = authenticate(
+            username=student.username,
+            password=pin,
+        )
+
+        if user is None:
+
+            raise forms.ValidationError(
+                "Incorrect PIN."
             )
 
-            if user is None:
-                raise forms.ValidationError(
-                    "Incorrect PIN."
-                )
+        if not user.is_student:
 
-            if not user.is_student:
-                raise forms.ValidationError(
-                    "This account is not a student account."
-                )
+            raise forms.ValidationError(
+                "This account is not a student account."
+            )
 
-            if not user.is_active:
-                raise forms.ValidationError(
-                    "This student account is inactive."
-                )
+        if not user.is_active:
 
-            cleaned["user"] = user
+            raise forms.ValidationError(
+                "This student account is inactive."
+            )
+
+        cleaned["user"] = user
 
         return cleaned
 
 
+# =========================================================
+# TEACHER LOGIN
+# =========================================================
+
 class TeacherLoginForm(forms.Form):
+
     teacher = forms.ModelChoiceField(
         label="Teacher Name",
-        queryset=User.objects.filter(
-            role=User.Role.TEACHER,
-            is_active=True,
-        ).order_by(
-            "first_name",
-            "last_name",
-            "username",
+
+        queryset=(
+            User.objects
+            .filter(
+                role=User.Role.TEACHER,
+                is_active=True,
+            )
+            .order_by(
+                "first_name",
+                "last_name",
+                "username",
+            )
         ),
+
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -321,7 +541,9 @@ class TeacherLoginForm(forms.Form):
 
     pin = forms.CharField(
         label="PIN",
+
         max_length=10,
+
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
@@ -331,28 +553,38 @@ class TeacherLoginForm(forms.Form):
     )
 
     def clean(self):
+
         cleaned = super().clean()
 
-        teacher = cleaned.get("teacher")
-        pin = cleaned.get("pin")
+        teacher = cleaned.get(
+            "teacher"
+        )
+
+        pin = cleaned.get(
+            "pin"
+        )
 
         if teacher and pin:
+
             user = authenticate(
                 username=teacher.username,
                 password=pin,
             )
 
             if user is None:
+
                 raise forms.ValidationError(
                     "Incorrect PIN."
                 )
 
             if not user.is_teacher:
+
                 raise forms.ValidationError(
                     "This account is not a teacher account."
                 )
 
             if not user.is_active:
+
                 raise forms.ValidationError(
                     "This teacher account is inactive."
                 )

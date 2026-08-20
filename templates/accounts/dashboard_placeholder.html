@@ -7,212 +7,67 @@
 <div class="container mt-4">
 
     <div class="mb-4">
-        <h1>
-            Welcome, {{ request.user.first_name|default:request.user.username }}
-        </h1>
-
-        <p class="text-muted">
-            Role: {{ request.user.get_role_display }}
-        </p>
+        <h1>Welcome, {{ request.user.first_name|default:request.user.username }}</h1>
+        <p class="text-muted">Role: {{ request.user.get_role_display }}</p>
     </div>
 
-
-    {% if request.user.role == "TEACHER" %}
-
-    <!-- ========================= -->
-    <!-- TEACHER DASHBOARD -->
-    <!-- ========================= -->
+    {% if request.user.role == "SUPER_ADMIN" %}
 
     <div class="row g-4">
 
-        <!-- Students -->
-        <div class="col-md-4">
+        <div class="col-md-6 col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">
-                        👨‍🎓 Students
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        Add, edit and remove student accounts.
-                    </p>
-
-                    <a href="{% url 'accounts:teacher_students' %}"
-                       class="btn btn-primary">
-                        Manage Students
-                    </a>
-
-                    <a href="{% url 'accounts:teacher_add_student' %}"
-                       class="btn btn-outline-primary mt-2">
-                        + Add Student
-                    </a>
+                    <h5 class="card-title">👨‍🏫 Users</h5>
+                    <p class="text-muted">Create and manage teachers and students.</p>
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-primary">Manage Users</a>
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <a href="{% url 'accounts:create_teacher' %}" class="btn btn-outline-primary btn-sm">+ Teacher</a>
+                        <a href="{% url 'accounts:create_student' %}" class="btn btn-outline-primary btn-sm">+ Student</a>
+                    </div>
                 </div>
             </div>
         </div>
 
-
-        <!-- Subjects -->
-        <div class="col-md-4">
+        <div class="col-md-6 col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">
-                        📚 Subjects
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        Create and manage your subjects.
-                    </p>
-
-                    <a href="{% url 'exams:subject_list' %}"
-                       class="btn btn-primary">
-                        My Subjects
-                    </a>
+                    <h5 class="card-title">📚 Subjects</h5>
+                    <p class="text-muted">View and manage all subjects.</p>
+                    <a href="{% url 'exams:subject_list' %}" class="btn btn-primary">All Subjects</a>
                 </div>
             </div>
         </div>
 
-
-        <!-- Exams -->
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        📝 Exams
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        Create exams and manage their questions.
-                    </p>
-
-                    <a href="{% url 'exams:exam_list' %}"
-                       class="btn btn-primary">
-                        My Exams
-                    </a>
-
-                    <a href="{% url 'exams:exam_create' %}"
-                       class="btn btn-outline-primary mt-2">
-                        + Create Exam
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Results -->
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        📊 Results
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        View student examination results.
-                    </p>
-
-                    <a href="#"
-                       class="btn btn-primary">
-                        Student Results
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-
-    {% elif request.user.role == "SUPER_ADMIN" %}
-
-    <!-- ========================= -->
-    <!-- SUPER ADMIN DASHBOARD -->
-    <!-- ========================= -->
-
-    <div class="row g-4">
-
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">👨‍🏫 Teachers</h5>
-
-                    <p class="text-muted">
-                        Create and manage teacher accounts.
-                    </p>
-
-                    <a href="{% url 'accounts:user_list' %}"
-                       class="btn btn-primary">
-                        Manage Users
-                    </a>
-
-                    <a href="{% url 'accounts:create_teacher' %}"
-                       class="btn btn-outline-primary mt-2">
-                        + Add Teacher
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">👨‍🎓 Students</h5>
-
-                    <p class="text-muted">
-                        Create and manage student accounts.
-                    </p>
-
-                    <a href="{% url 'accounts:user_list' %}"
-                       class="btn btn-primary">
-                        Manage Students
-                    </a>
-
-                    <a href="{% url 'accounts:create_student' %}"
-                       class="btn btn-outline-primary mt-2">
-                        + Add Student
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="col-md-4">
+        <div class="col-md-6 col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h5 class="card-title">📝 Exams</h5>
+                    <p class="text-muted">Manage all examinations.</p>
+                    <a href="{% url 'exams:exam_list' %}" class="btn btn-primary">All Exams</a>
+                </div>
+            </div>
+        </div>
 
-                    <p class="text-muted">
-                        Manage all examinations.
-                    </p>
-
-                    <a href="{% url 'exams:exam_list' %}"
-                       class="btn btn-primary">
-                        Manage Exams
-                    </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Results</h5>
+                    <p class="text-muted">View every student’s results.</p>
+                    <a href="{% url 'attempts:admin_results' %}" class="btn btn-primary">All Results</a>
                 </div>
             </div>
         </div>
 
     </div>
 
-
     {% elif request.user.role == "STUDENT" %}
-
-    <!-- ========================= -->
-    <!-- STUDENT DASHBOARD -->
-    <!-- ========================= -->
 
     <div class="card shadow-sm">
         <div class="card-body">
             <h4>Student Dashboard</h4>
-
-            <p class="text-muted">
-                Welcome to the CBT System.
-            </p>
-
-            <a href="#"
-               class="btn btn-primary">
-                Available Exams
-            </a>
+            <p class="text-muted">Welcome to the CBT System.</p>
+            <a href="{% url 'attempts:available_exams' %}" class="btn btn-primary">Available Exams</a>
         </div>
     </div>
 

@@ -1,151 +1,480 @@
-{% extends "base.html" %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block title %}Student Login – TLC{% endblock %}
+<head>
 
-{% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center py-3">
-                <img
-                    src="{% static 'images/tlc_logo.png' %}"
-                    alt="TLC Logo"
-                    style="height: 50px; width: auto; margin-bottom: 8px;"
-                >
-                <h4 class="mb-0">Student Login</h4>
-            </div>
+    <meta charset="UTF-8">
 
-            <div class="card-body">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
+    <title>Student Login – TLC</title>
 
-                <form method="post" id="studentLoginForm">
-                    {% csrf_token %}
+    <style>
 
-                    <div class="mb-3">
-                        <label for="id_student_class" class="form-label">
-                            Class
-                        </label>
-
-                        {{ form.student_class }}
-
-                        {% if form.student_class.errors %}
-                            <div class="text-danger small">
-                                {{ form.student_class.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_student" class="form-label">
-                            Student Name
-                        </label>
-
-                        {{ form.student }}
-
-                        {% if form.student.errors %}
-                            <div class="text-danger small">
-                                {{ form.student.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_pin" class="form-label">
-                            PIN
-                        </label>
-
-                        {{ form.pin }}
-
-                        {% if form.pin.errors %}
-                            <div class="text-danger small">
-                                {{ form.pin.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">
-                        Login
-                    </button>
-                </form>
-
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-
-{% block extra_js %}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const classSelect = document.getElementById("id_student_class");
-    const studentSelect = document.getElementById("id_student");
-
-    function loadStudents(selectedClass) {
-
-        studentSelect.innerHTML =
-            '<option value="">---------</option>';
-
-        if (!selectedClass) {
-            return;
+        * {
+            box-sizing: border-box;
         }
 
-        fetch(
-            "{% url 'accounts:students_by_class' %}?class=" +
-            encodeURIComponent(selectedClass)
-        )
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error("Failed to load students.");
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 580px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow:
+                0 4px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .header {
+            background: #1677ff;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            margin: 10px 0 0;
+            font-size: 32px;
+        }
+
+        .logo {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+        }
+
+        .body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        select,
+        input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        select:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #1677ff;
+            box-shadow:
+                0 0 0 3px rgba(22, 119, 255, 0.15);
+        }
+
+        .help-text {
+            margin-top: 7px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #ffbcbc;
+            color: #b00020;
+            padding: 12px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+        }
+
+        .student-count {
+            margin-top: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-btn {
+            width: 100%;
+            border: none;
+            background: #1677ff;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background: #0d65dc;
+        }
+
+        .login-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #1677ff;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                align-items: flex-start;
+                padding: 20px 10px;
             }
 
-            return response.json();
-        })
-        .then(function (students) {
+            .body {
+                padding: 22px;
+            }
 
-            students.forEach(function (student) {
+            .header h1 {
+                font-size: 27px;
+            }
+        }
 
-                const option = document.createElement("option");
+    </style>
 
-                option.value = student.id;
+</head>
+
+
+<body>
+
+<div class="login-card">
+
+    <div class="header">
+
+        <div>
+            <!--
+                If your project already has a logo,
+                replace this with your existing logo.
+            -->
+        </div>
+
+        <h1>
+            Student Login
+        </h1>
+
+    </div>
+
+
+    <div class="body">
+
+        {% if form.non_field_errors %}
+
+            <div class="error">
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+        {% endif %}
+
+
+        <form
+            method="post"
+            id="student-login-form"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- =========================================
+                 CLASS
+                 ========================================= -->
+
+            <div class="form-group">
+
+                <label for="id_student_class">
+                    Class
+                </label>
+
+                {{ form.student_class }}
+
+            </div>
+
+
+            <!-- =========================================
+                 STUDENT
+                 ========================================= -->
+
+            <div class="form-group">
+
+                <label for="id_student">
+                    Student Name
+                </label>
+
+                {{ form.student }}
+
+                <div
+                    class="help-text"
+                    id="student-help"
+                >
+                    Select your class first.
+                </div>
+
+                <div
+                    class="student-count"
+                    id="student-count"
+                ></div>
+
+            </div>
+
+
+            <!-- =========================================
+                 PIN
+                 ========================================= -->
+
+            <div class="form-group">
+
+                <label for="id_pin">
+                    PIN
+                </label>
+
+                {{ form.pin }}
+
+            </div>
+
+
+            <!-- =========================================
+                 LOGIN
+                 ========================================= -->
+
+            <button
+                type="submit"
+                class="login-btn"
+                id="login-button"
+            >
+                Login
+            </button>
+
+        </form>
+
+
+        <a
+            href="{% url 'accounts:home' %}"
+            class="back-link"
+        >
+            Back to Home
+        </a>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const classSelect =
+    document.getElementById(
+        "id_student_class"
+    );
+
+const studentSelect =
+    document.getElementById(
+        "id_student"
+    );
+
+const studentHelp =
+    document.getElementById(
+        "student-help"
+    );
+
+const studentCount =
+    document.getElementById(
+        "student-count"
+    );
+
+
+function clearStudents() {
+
+    studentSelect.innerHTML = "";
+
+    const option =
+        document.createElement(
+            "option"
+        );
+
+    option.value = "";
+
+    option.textContent =
+        "---------";
+
+    studentSelect.appendChild(
+        option
+    );
+
+    studentCount.textContent = "";
+
+}
+
+
+async function loadStudents() {
+
+    const selectedClass =
+        classSelect.value;
+
+    clearStudents();
+
+    if (!selectedClass) {
+
+        studentHelp.textContent =
+            "Select your class first.";
+
+        return;
+    }
+
+
+    studentHelp.textContent =
+        "Loading students...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "{% url 'accounts:students_by_class' %}"
+                + "?class="
+                + encodeURIComponent(
+                    selectedClass
+                )
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load students."
+            );
+
+        }
+
+
+        const students =
+            await response.json();
+
+
+        if (!students.length) {
+
+            studentHelp.textContent =
+                "No active students found for this class.";
+
+            studentCount.textContent = "";
+
+            return;
+
+        }
+
+
+        students.forEach(
+            function(student) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    student.id;
+
+                let label =
+                    student.name;
+
+                if (
+                    student.admission_number
+                ) {
+
+                    label +=
+                        " ("
+                        + student.admission_number
+                        + ")";
+
+                }
 
                 option.textContent =
-                    student.name +
-                    " (" +
-                    student.admission_number +
-                    ")";
+                    label;
 
-                studentSelect.appendChild(option);
-            });
-        })
-        .catch(function (error) {
+                studentSelect.appendChild(
+                    option
+                );
 
-            console.error("Student loading error:", error);
+            }
+        );
 
-            studentSelect.innerHTML =
-                '<option value="">Could not load students</option>';
-        });
+
+        studentHelp.textContent =
+            "Select your name.";
+
+        studentCount.textContent =
+            students.length
+            + " student"
+            + (
+                students.length === 1
+                    ? ""
+                    : "s"
+            )
+            + " found in "
+            + selectedClass
+            + ".";
+
+
+    } catch (error) {
+
+        studentHelp.textContent =
+            "Unable to load students. Please refresh and try again.";
+
+        studentCount.textContent = "";
+
+        console.error(error);
+
     }
 
-
-    classSelect.addEventListener("change", function () {
-        loadStudents(this.value);
-    });
+}
 
 
-    if (classSelect.value) {
-        loadStudents(classSelect.value);
+classSelect.addEventListener(
+    "change",
+    loadStudents
+);
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        if (classSelect.value) {
+
+            loadStudents();
+
+        }
+
     }
+);
 
-});
 </script>
-{% endblock %}
+
+</body>
+
+</html>
