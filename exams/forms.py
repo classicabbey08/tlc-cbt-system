@@ -157,16 +157,21 @@ class ExamForm(forms.ModelForm):
                 )
 
         # -------------------------------------------------
-        # DEPARTMENT CHOICES
+        # DEPARTMENT
         #
-        # GENERAL is NOT offered as a manual choice.
+        # We include GENERAL here so JSS exams can use it.
         #
-        # JSS automatically becomes GENERAL.
+        # The clean() method below makes sure SSS exams
+        # cannot use GENERAL.
         # -------------------------------------------------
 
         self.fields[
             "department"
         ].choices = [
+            (
+                User.Department.GENERAL,
+                "General",
+            ),
             (
                 User.Department.SCIENCE,
                 "Science",
@@ -180,6 +185,20 @@ class ExamForm(forms.ModelForm):
                 "Arts",
             ),
         ]
+
+        # -------------------------------------------------
+        # EXISTING EXAM
+        #
+        # If editing an existing JSS exam, General remains
+        # selected.
+        # -------------------------------------------------
+
+        if self.instance and self.instance.pk:
+
+            if self.instance.target_class in JSS_CLASSES:
+                self.fields[
+                    "department"
+                ].initial = User.Department.GENERAL
 
     # =====================================================
     # CLEAN
@@ -200,7 +219,7 @@ class ExamForm(forms.ModelForm):
         # -------------------------------------------------
         # JSS
         #
-        # JSS NEVER uses a department.
+        # JSS1, JSS2 and JSS3 always use GENERAL.
         # -------------------------------------------------
 
         if target_class in JSS_CLASSES:
@@ -212,7 +231,13 @@ class ExamForm(forms.ModelForm):
         # -------------------------------------------------
         # SSS
         #
-        # SSS MUST have a real department.
+        # SSS1, SSS2 and SSS3 must use:
+        #
+        # Science
+        # Commercial
+        # Arts
+        #
+        # They cannot use General.
         # -------------------------------------------------
 
         elif target_class in SS_CLASSES:
