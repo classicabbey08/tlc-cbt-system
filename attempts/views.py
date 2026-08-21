@@ -22,7 +22,7 @@ def student_can_take_exam(user, exam):
 
     JSS students:
         - Must match the target class.
-        - Must have/use GENERAL department.
+        - Must use GENERAL department.
 
     SS students:
         - Must match the target class.
@@ -66,8 +66,6 @@ def available_exams(request):
     """
     Show only active exams available to the logged-in student.
 
-    Rules:
-
     JSS:
         Class must match.
         Department must be GENERAL.
@@ -80,7 +78,7 @@ def available_exams(request):
     user = request.user
 
     # -----------------------------------------------------
-    # START WITH ACTIVE EXAMS FOR THE STUDENT'S CLASS
+    # START WITH ACTIVE EXAMS FOR STUDENT'S CLASS
     # -----------------------------------------------------
 
     exams = (
@@ -172,10 +170,6 @@ def available_exams(request):
 def start_exam(request, exam_id):
     """
     Start an exam only if the student is eligible.
-
-    The server checks both:
-        1. Class
-        2. Department for SS students
     """
 
     exam = get_object_or_404(
@@ -304,7 +298,7 @@ def take_exam(request, attempt_id):
     )
 
     # -----------------------------------------------------
-    # RENDER EXAM
+    # RENDER
     # -----------------------------------------------------
 
     return render(
@@ -337,7 +331,7 @@ def submit_exam(request, attempt_id):
     )
 
     # -----------------------------------------------------
-    # ONLY POST IS ALLOWED FOR SUBMISSION
+    # ONLY POST IS ALLOWED
     # -----------------------------------------------------
 
     if request.method != "POST":
@@ -380,10 +374,12 @@ def submit_exam(request, attempt_id):
             ] = choice_id
 
     # -----------------------------------------------------
-    # SERVER IS FINAL AUTHORITY ON TIMER
+    # CHECK SERVER TIMER
     # -----------------------------------------------------
 
-    if attempt.is_expired:
+    expired = attempt.is_expired
+
+    if expired:
 
         messages.warning(
             request,
@@ -403,7 +399,7 @@ def submit_exam(request, attempt_id):
     # NORMAL SUBMISSION MESSAGE
     # -----------------------------------------------------
 
-    if not attempt.is_expired:
+    if not expired:
 
         messages.success(
             request,
@@ -411,7 +407,7 @@ def submit_exam(request, attempt_id):
         )
 
     # -----------------------------------------------------
-    # SHOW CONFIRMATION
+    # SHOW RESULT
     # -----------------------------------------------------
 
     return redirect(
@@ -464,6 +460,114 @@ def result_detail(request, attempt_id):
         "attempts/result_detail.html",
         {
             "attempt": attempt,
+        },
+    )
+
+
+# =========================================================
+# STUDENT - CERTIFICATE
+# =========================================================
+
+@role_required("STUDENT")
+def student_certificate(request, attempt_id):
+    """
+    Display a printable certificate for a submitted exam.
+
+    The certificate belongs only to the logged-in student.
+    """
+
+    attempt = get_object_or_404(
+        ExamAttempt.objects.select_related(
+            "student",
+            "exam",
+            "exam__subject",
+        ),
+        id=attempt_id,
+        student=request.user,
+        status=ExamAttempt.Status.SUBMITTED,
+    )
+
+    student = attempt.student
+
+    # -----------------------------------------------------
+    # CALCULATE PERCENTAGE
+    # -----------------------------------------------------
+
+    if attempt.total_marks:
+
+        percentage = round(
+            (
+                attempt.score
+                / attempt.total_marks
+            ) * 100,
+            1,
+        )
+
+    else:
+
+        percentage = 0
+
+    # -----------------------------------------------------
+    # DETERMINE CLASS
+    # -----------------------------------------------------
+
+    is_jss = (
+        student.student_class.startswith("JSS")
+    )
+
+    is_sss = (
+        student.student_class.startswith("SSS")
+    )
+
+    # -----------------------------------------------------
+    # DETERMINE GRADE
+    # -----------------------------------------------------
+
+    if percentage >= 75:
+
+        grade = "A"
+        remark = "Excellent"
+
+    elif percentage >= 65:
+
+        grade = "B"
+        remark = "Very Good"
+
+    elif percentage >= 55:
+
+        grade = "C"
+        remark = "Good"
+
+    elif percentage >= 45:
+
+        grade = "D"
+        remark = "Pass"
+
+    elif percentage >= 40:
+
+        grade = "E"
+        remark = "Fair"
+
+    else:
+
+        grade = "F"
+        remark = "Fail"
+
+    # -----------------------------------------------------
+    # RENDER CERTIFICATE
+    # -----------------------------------------------------
+
+    return render(
+        request,
+        "attempts/student_certificate.html",
+        {
+            "attempt": attempt,
+            "student": student,
+            "percentage": percentage,
+            "grade": grade,
+            "remark": remark,
+            "is_jss": is_jss,
+            "is_sss": is_sss,
         },
     )
 

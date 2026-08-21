@@ -1,151 +1,195 @@
 {% extends "base.html" %}
 
-{% block title %}Student Result (Admin){% endblock %}
+{% block title %}Exam Result{% endblock %}
 
 {% block content %}
 
-<div class="container py-4">
+<div class="container py-5">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-1">Student Result</h3>
-            <p class="text-muted mb-0">Full examination result (Super Admin view)</p>
-        </div>
-        <a href="{% url 'attempts:admin_results' %}" class="btn btn-outline-secondary">
-            ← Back to All Results
-        </a>
-    </div>
+    <div class="row justify-content-center">
 
-    <!-- Student / Exam Information -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6 class="text-muted mb-1">Student</h6>
-                    <h5 class="mb-1">
-                        {% if attempt.student.get_full_name %}
-                            {{ attempt.student.get_full_name }}
-                        {% else %}
-                            {{ attempt.student.username }}
-                        {% endif %}
-                    </h5>
-                    {% if attempt.student.admission_number %}
-                        <small class="text-muted">Admission No: {{ attempt.student.admission_number }}</small>
-                    {% endif %}
-                </div>
+        <div class="col-lg-8">
 
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6 class="text-muted mb-1">Examination</h6>
-                    <h5 class="mb-1">{{ attempt.exam.title }}</h5>
-                    <small class="text-muted">{{ attempt.exam.subject.name }}</small>
-                </div>
+            <div class="card shadow border-0">
 
-                <div class="col-md-4">
-                    <h6 class="text-muted mb-1">Created By</h6>
-                    <h5 class="mb-1">{{ attempt.exam.created_by.get_full_name|default:attempt.exam.created_by.username }}</h5>
-                </div>
-            </div>
-        </div>
-    </div>
+                <div class="card-body p-4 p-md-5 text-center">
 
-    <!-- Score Summary -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3 mb-md-0">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
-                    <small class="text-muted">Score</small>
-                    <h2 class="mt-2 mb-0">
-                        {{ attempt.score }}
-                        <span class="fs-5 text-muted">/ {{ attempt.total_marks }}</span>
-                    </h2>
-                </div>
-            </div>
-        </div>
+                    <!-- Success Icon -->
 
-        <div class="col-md-4 mb-3 mb-md-0">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
-                    <small class="text-muted">Percentage</small>
-                    <h2 class="mt-2 mb-0">
-                        {% if attempt.total_marks %}
-                            {% widthratio attempt.score attempt.total_marks 100 %}%
-                        {% else %}
-                            0%
-                        {% endif %}
-                    </h2>
-                </div>
-            </div>
-        </div>
+                    <div class="mb-4">
 
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
-                    <small class="text-muted">Submitted</small>
-                    <h6 class="mt-3 mb-0">
-                        {% if attempt.submitted_at %}
-                            {{ attempt.submitted_at|date:"M d, Y" }}
-                            <br>
-                            <small class="text-muted">{{ attempt.submitted_at|time:"g:i A" }}</small>
-                        {% else %}
-                            —
-                        {% endif %}
-                    </h6>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="80"
+                            height="80"
+                            fill="#198754"
+                            viewBox="0 0 16 16"
+                        >
 
-    <!-- Question Breakdown -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Question Breakdown</h5>
-        </div>
-        <div class="card-body">
+                            <path
+                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
+                            />
 
-            {% for answer in answers %}
-            <div class="border rounded p-3 mb-3">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="me-3">
-                        <h6 class="mb-2">Question {{ forloop.counter }}</h6>
-                        <p class="mb-3">{{ answer.question.text }}</p>
+                        </svg>
+
                     </div>
-                    <span class="badge bg-light text-dark">
-                        {{ answer.question.marks }} mark{{ answer.question.marks|pluralize }}
-                    </span>
+
+
+                    <!-- Heading -->
+
+                    <h2 class="mb-2">
+                        Exam Submitted Successfully
+                    </h2>
+
+                    <p class="text-muted mb-4">
+
+                        {{ attempt.exam.title }}
+                        —
+                        {{ attempt.exam.subject.name }}
+
+                    </p>
+
+
+                    <!-- Score Cards -->
+
+                    <div class="row g-3 mb-4">
+
+                        <!-- Score -->
+
+                        <div class="col-md-4">
+
+                            <div class="border rounded p-3 h-100">
+
+                                <div class="text-muted small">
+                                    Score
+                                </div>
+
+                                <div class="fs-3 fw-bold">
+
+                                    {{ attempt.score }}
+                                    /
+                                    {{ attempt.total_marks }}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Percentage -->
+
+                        <div class="col-md-4">
+
+                            <div class="border rounded p-3 h-100">
+
+                                <div class="text-muted small">
+                                    Percentage
+                                </div>
+
+                                <div class="fs-3 fw-bold">
+
+                                    {% if attempt.total_marks %}
+
+                                        {% widthratio attempt.score attempt.total_marks 100 %}%
+
+                                    {% else %}
+
+                                        0%
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Submitted -->
+
+                        <div class="col-md-4">
+
+                            <div class="border rounded p-3 h-100">
+
+                                <div class="text-muted small">
+                                    Submitted
+                                </div>
+
+                                <div class="fs-6 fw-semibold mt-2">
+
+                                    {% if attempt.submitted_at %}
+
+                                        {{ attempt.submitted_at|date:"M d, Y" }}
+
+                                        <br>
+
+                                        <small class="text-muted">
+
+                                            {{ attempt.submitted_at|time:"g:i A" }}
+
+                                        </small>
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Message -->
+
+                    <div class="alert alert-info text-start">
+
+                        <strong>Note:</strong>
+
+                        Your teacher can still review the full
+                        breakdown of your answers.
+
+                        This score has been recorded successfully.
+
+                    </div>
+
+
+                    <!-- Buttons -->
+
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+
+                        <a
+                            href="{% url 'attempts:available_exams' %}"
+                            class="btn btn-primary btn-lg px-4"
+                        >
+
+                            Back to Available Exams
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'attempts:student_certificate' attempt.id %}"
+                            class="btn btn-success btn-lg px-4"
+                        >
+
+                            🏆 View / Print Certificate
+
+                        </a>
+
+                    </div>
+
                 </div>
 
-                <div class="mb-2">
-                    <strong>Student's Answer:</strong>
-                    {% if answer.selected_choice %}
-                        <span class="ms-1">{{ answer.selected_choice.text }}</span>
-                        {% if answer.selected_choice.is_correct %}
-                            <span class="badge bg-success ms-2">Correct</span>
-                        {% else %}
-                            <span class="badge bg-danger ms-2">Incorrect</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="text-muted ms-1">Not answered</span>
-                        <span class="badge bg-secondary ms-2">No Answer</span>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <strong>Correct Answer:</strong>
-                    {% for choice in answer.question.choices.all %}
-                        {% if choice.is_correct %}
-                            <span class="text-success ms-1">{{ choice.text }}</span>
-                        {% endif %}
-                    {% endfor %}
-                </div>
             </div>
-            {% empty %}
-            <div class="text-center text-muted py-4">
-                <p class="mb-0">No answer records were found for this attempt.</p>
-            </div>
-            {% endfor %}
 
         </div>
+
     </div>
 
 </div>
